@@ -114,7 +114,7 @@ body{margin:0;background:#f3f4f6;padding:12px}
 </div>
 
 <div class="photo-box">
-  <img id="preview" src="https://via.placeholder.com/120">
+  <img id="preview" src="images/avatar.png">
   <label class="btn photo">
   <i class="fa fa-camera"></i> Take Photo
   <input 
@@ -214,7 +214,7 @@ function show(){
     g[c].forEach(s=>{
       box.innerHTML+=`
       <div class="student">
-        <img src="${s.photo||'https://via.placeholder.com/60'}">
+<img src="${s.photo||'images/avatar.png'}">
         <div class="info">
           <b>${s.name}</b><br>${s.parent}<br>${s.phone}
         </div>
