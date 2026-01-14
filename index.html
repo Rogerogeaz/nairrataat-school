@@ -1,12 +1,269 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Nairrataat School</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Nairrataat School – Student Register</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;font-family:'Poppins',sans-serif}
+body{margin:0;background:#f3f4f6;padding:12px}
+
+/* SPLASH */
+#splash{
+  position:fixed;
+  inset:0;
+  background:#1e88e5;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+}
+#splash img{width:140px;animation:zoom 2s ease}
+#splash h1{color:#fff;margin-top:15px}
+@keyframes zoom{
+  from{transform:scale(.5);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+
+.container{
+  max-width:480px;
+  margin:auto;
+  background:#fff;
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.15)
+}
+
+.header{text-align:center}
+.header h2{color:#1e88e5;margin:5px 0}
+.header p{font-size:13px;color:#666}
+
+.photo-box{text-align:center;margin:10px 0}
+.photo-box img{
+  width:120px;height:120px;border-radius:50%;
+  object-fit:cover;border:3px solid #1e88e5
+}
+
+.input-box{
+  display:flex;align-items:center;
+  background:#f2f2f2;border-radius:10px;
+  padding:10px;margin-top:10px
+}
+.input-box i{color:#1e88e5;margin-right:10px}
+.input-box input,.input-box select{
+  border:none;background:none;width:100%;
+  outline:none;font-size:14px
+}
+
+.btn{
+  width:100%;padding:14px;border:none;
+  border-radius:12px;margin-top:12px;
+  font-weight:600;color:#fff;cursor:pointer
+}
+.save{background:#43a047}
+.photo{background:#1e88e5}
+
+.class-title{
+  background:#1e88e5;color:#fff;
+  padding:10px;border-radius:10px;
+  margin-top:15px;
+  display:flex;justify-content:space-between;
+  cursor:pointer
+}
+.class-title i{transition:.3s}
+.class-title.open i{transform:rotate(180deg)}
+
+.class-box{display:none}
+
+.student{
+  background:#f9f9f9;
+  padding:10px;border-radius:12px;
+  display:flex;gap:10px;margin-top:8px
+}
+.student img{
+  width:60px;height:60px;border-radius:50%;
+  object-fit:cover
+}
+.info{flex:1;font-size:13px}
+.actions i{
+  font-size:18px;cursor:pointer;margin:4px
+}
+.call{color:#2e7d32}
+.edit{color:#1e88e5}
+.delete{color:#e53935}
+</style>
 </head>
+
 <body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <img src="https://i.ibb.co/s9rCPWdR/1000027882.png">
   <h1>Nairrataat School</h1>
-  <p>Website is live 🎉</p>
+</div>
+
+<div class="container">
+<div class="header">
+  <h2>Nairrataat School</h2>
+  <p>Student Register</p>
+</div>
+
+<div class="photo-box">
+  <img id="preview" src="https://via.placeholder.com/120">
+  <label class="btn photo">
+  <i class="fa fa-camera"></i> Take Photo
+  <input 
+    type="file"
+    accept="image/*"
+    capture="environment"
+    onchange="loadPhoto(event)"
+    style="display:none"
+  >
+</label>
+</div>
+
+<div class="input-box"><i class="fa fa-user"></i><input id="name" placeholder="Student Name"></div>
+<div class="input-box"><i class="fa fa-id-card"></i><input id="adm" placeholder="Admission Number"></div>
+
+<div class="input-box">
+<i class="fa fa-school"></i>
+<select id="className">
+<option value="">Select Class</option>
+<option>PP1</option><option>PP2</option>
+<option>Grade 1</option><option>Grade 2</option>
+<option>Grade 3</option><option>Grade 4</option>
+<option>Grade 5</option><option>Grade 6</option>
+<option>Grade 7</option><option>Grade 8</option><option>Grade 9</option>
+</select>
+</div>
+
+<div class="input-box">
+<i class="fa fa-venus-mars"></i>
+<select id="gender">
+<option value="">Gender</option>
+<option>Male</option>
+<option>Female</option>
+</select>
+</div>
+
+<div class="input-box"><i class="fa fa-user-shield"></i><input id="parent" placeholder="Parent / Guardian"></div>
+<div class="input-box"><i class="fa fa-phone"></i><input id="phone" placeholder="Phone"></div>
+
+<button class="btn save" onclick="saveStudent()">Save Student</button>
+
+<div id="list"></div>
+</div>
+
+<script>
+const name = document.getElementById("name");
+const adm = document.getElementById("adm");
+const className = document.getElementById("className");
+const gender = document.getElementById("gender");
+const parent = document.getElementById("parent");
+const phone = document.getElementById("phone");
+const preview = document.getElementById("preview");
+let photoData="", edit=-1;
+
+function loadPhoto(e){
+  const r=new FileReader();
+  r.onload=()=>{photoData=r.result;preview.src=photoData};
+  r.readAsDataURL(e.target.files[0]);
+}
+
+function get(){return JSON.parse(localStorage.getItem("students")||"[]")}
+function set(d){localStorage.setItem("students",JSON.stringify(d))}
+
+function saveStudent(){
+if(name.value.trim()==="") return alert("Enter student name");
+if(className.value==="") return alert("Select class");
+  const s={
+    name:name.value,adm:adm.value,class:className.value,
+    gender:gender.value,parent:parent.value,
+    phone:phone.value,photo:photoData
+  };
+  const d=get();
+  edit>-1?d[edit]=s:d.push(s);
+  edit=-1;set(d);clear();show();
+}
+
+function clear(){
+  name.value=adm.value=parent.value=phone.value="";
+  className.value=gender.value="";
+  preview.src="https://via.placeholder.com/120";
+  photoData="";
+}
+
+function show(){
+  const d=get(),list=document.getElementById("list");
+  list.innerHTML="";
+  const g={};
+  d.forEach((s,i)=>{(g[s.class]=g[s.class]||[]).push({...s,i})});
+  for(let c in g){
+    const id=c.replace(/\s/g,"");
+    list.innerHTML+=`
+      <div class="class-title" onclick="toggle('${id}',this)">
+        ${c}<i class="fa fa-chevron-down"></i>
+      </div>
+      <div class="class-box" id="${id}"></div>`;
+    const box=document.getElementById(id);
+    g[c].forEach(s=>{
+      box.innerHTML+=`
+      <div class="student">
+        <img src="${s.photo||'https://via.placeholder.com/60'}">
+        <div class="info">
+          <b>${s.name}</b><br>${s.parent}<br>${s.phone}
+        </div>
+        <div class="actions">
+          <i class="fa fa-phone call" onclick="location.href='tel:${s.phone}'"></i>
+          <i class="fa fa-pen edit" onclick="editStudent(${s.i})"></i>
+          <i class="fa fa-trash delete" onclick="del(${s.i})"></i>
+        </div>
+      </div>`;
+    });
+  }
+}
+
+function toggle(id,h){
+  const b=document.getElementById(id);
+  const o=b.style.display==="block";
+  b.style.display=o?"none":"block";
+  h.classList.toggle("open",!o);
+}
+
+function editStudent(i){
+  const s=get()[i];
+  name.value=s.name;adm.value=s.adm;
+  className.value=s.class;gender.value=s.gender;
+  parent.value=s.parent;phone.value=s.phone;
+  preview.src=s.photo||preview.src;
+  photoData=s.photo;edit=i;
+}
+
+function del(i){
+  if(confirm("Delete student?")){
+    const d=get();d.splice(i,1);set(d);show();
+  }
+}
+
+window.onload=()=>{
+  setTimeout(()=>document.getElementById("splash").remove(),3000);
+  show();
+}
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("./service-worker.js")
+      .then(() => console.log("Service Worker registered"))
+      .catch(err => console.log("SW error", err));
+  });
+}
+</script>
 </body>
-</html>
+  </html>
