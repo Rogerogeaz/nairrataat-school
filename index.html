@@ -126,7 +126,6 @@ body{margin:0;background:#f3f4f6;padding:12px}
 <!-- FIREBASE SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <script>
 // ================= FIREBASE CONFIG =================
@@ -140,7 +139,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const storage = firebase.storage();
+
 
 // ================= VARIABLES =================
 const name = document.getElementById("name");
@@ -181,36 +180,17 @@ function saveStudent() {
     gender: gender.value,
     parent: parent.value,
     phone: phone.value,
-    photo: photoData || "images/avatar.png",
+    photo: photoData || preview.src || "images/avatar.png",
     uapi: role==="admin" ? uapi.value : "",
     assessment: role==="admin" ? assessment.value : ""
   };
 
-  // Only upload if new photo (base64)
-  if(photoData && photoData.startsWith("data:image")){
-    const fileName = docIdClean + ".jpg"; // overwrite same file instead of new every time
-    const storageRef = storage.ref("students/" + fileName);
-
-    storageRef.putString(photoData, "data_url")
-      .then(res => res.ref.getDownloadURL())
-      .then(url => {
-        student.photo = url;
-        return db.collection("students").doc(docIdClean).set(student);
-      })
-      .then(()=>{
-        alert("Student saved successfully");
-        clearFields();
-      })
-      .catch(err=>alert("Save error: " + err.message));
-  } else {
-    // Photo is already uploaded URL or none
-    db.collection("students").doc(docIdClean).set(student)
-      .then(()=>{
-        alert("Student saved successfully");
-        clearFields();
-      })
-      .catch(err=>alert("Save error: " + err.message));
-  }
+  db.collection("students").doc(docIdClean).set(student)
+    .then(()=>{
+      alert("Student saved successfully");
+      clearFields();
+    })
+    .catch(err=>alert("Save error: " + err.message));
 }
 
 // ================= CLEAR FORM =================
